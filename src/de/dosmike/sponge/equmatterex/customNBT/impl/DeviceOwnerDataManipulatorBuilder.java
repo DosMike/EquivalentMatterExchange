@@ -1,6 +1,8 @@
 package de.dosmike.sponge.equmatterex.customNBT.impl;
 
+import de.dosmike.sponge.equmatterex.customNBT.DeviceOwnerData;
 import de.dosmike.sponge.equmatterex.customNBT.HoloVisibleData;
+import de.dosmike.sponge.equmatterex.customNBT.ImmutableDeviceOwnerData;
 import de.dosmike.sponge.equmatterex.customNBT.ImmutableHoloVisibleData;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
@@ -11,24 +13,24 @@ import org.spongepowered.api.data.persistence.InvalidDataException;
 
 import java.util.Optional;
 
-public class HoloVisibleDataManipulatorBuilder extends AbstractDataBuilder<HoloVisibleData> implements DataManipulatorBuilder<HoloVisibleData, ImmutableHoloVisibleData> {
+public class DeviceOwnerDataManipulatorBuilder extends AbstractDataBuilder<DeviceOwnerData> implements DataManipulatorBuilder<DeviceOwnerData, ImmutableDeviceOwnerData> {
 
-    public HoloVisibleDataManipulatorBuilder() {
-        super(HoloVisibleData.class, 1);
+    public DeviceOwnerDataManipulatorBuilder() {
+        super(DeviceOwnerData.class, 1);
     }
 
     @Override
-    public HoloVisibleDataImpl create() {
-        return new HoloVisibleDataImpl();
+    public DeviceOwnerDataImpl create() {
+        return new DeviceOwnerDataImpl();
     }
 
     @Override
-    public Optional<HoloVisibleData> createFrom(DataHolder dataHolder) {
+    public Optional<DeviceOwnerData> createFrom(DataHolder dataHolder) {
         return create().fill(dataHolder, MergeFunction.IGNORE_ALL);
     }
 
     @Override
-    public Optional<HoloVisibleData> buildContent(DataView container) throws InvalidDataException {
+    public Optional<DeviceOwnerData> buildContent(DataView container) throws InvalidDataException {
         return create().from(container);
     }
 }

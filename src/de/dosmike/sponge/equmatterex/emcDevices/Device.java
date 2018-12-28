@@ -1,32 +1,49 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.dosmike.sponge.equmatterex.EquivalentMatter;
+import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
+import de.dosmike.sponge.equmatterex.customNBT.impl.DeviceOwnerDataImpl;
+import de.dosmike.sponge.equmatterex.customNBT.impl.EMCStoreDataImpl;
 import de.dosmike.sponge.equmatterex.customNBT.impl.HoloVisibleDataImpl;
 import org.apache.commons.lang3.NotImplementedException;
+import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.ArmorStand;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigInteger;
+import java.util.UUID;
 
 public abstract class Device {
 
-    public enum Type {
-        COLLECTOR(true),
-        CONDENSOR(true),
-        TRANSMUTATION_TABLE(false);
 
-        private final boolean holo;
+    public enum Type {
+        COLLECTOR(true, true),
+        CONDENSER(true, true),
+        TRANSMUTATION_TABLE(false, false);
+
+        private final boolean holo, upgradeable;
         public boolean hasHologram() {
             return holo;
         }
-        Type(boolean hasHologram) {
+        public boolean isUpgradeable() {
+            return upgradeable;
+        }
+        Type(boolean hasHologram, boolean isUpgradeable) {
             holo = hasHologram;
+            upgradeable = isUpgradeable;
+        }
+
+        @Override
+        public String toString() {
+            return name().charAt(0)+name().toLowerCase().substring(1);
         }
     }
 
@@ -38,12 +55,22 @@ public abstract class Device {
     public Type getType() {
         return type;
     }
-//    private UUID owner;
+    private UUID owner=null;
+    public UUID getOwner() {
+        return owner;
+    }
 
     public Device(Location<World> baseBlockLocation, Type type) {
         this.baseLocation = baseBlockLocation;
         this.type = type;
 //        this.owner = owner;
+    }
+    /** for loading purposes */
+    public void setOwner(UUID owner) {
+        this.owner = owner;
+    }
+    public boolean isOwner(Player player) {
+        return player.getUniqueId().equals(owner); //null safe (in case the owner property was lost or never set)
     }
     protected boolean hideText = false;
     /** returns wether this device currently displays holograms */
@@ -124,7 +151,33 @@ public abstract class Device {
             return Condenser.validateStructure(location);
         } else if (device instanceof Collector) {
             return Collector.validateStructure(location);
+        } else if (device instanceof TransmutationTable) {
+            return TransmutationTable.validateStructure(location);
         }
         return false;
+    }
+
+    public void safeNBT() {
+        //store custom data
+        TileEntity te = baseLocation.getRelative(Direction.UP).getTileEntity().get();
+        if (!te.offer(new EMCStoreDataImpl(getEMC())).isSuccessful())
+            EquivalentMatter.w("Was not able to safe %s", CustomNBT.EMC.getName());
+        if (type.hasHologram()) {
+            if (!te.offer(new HoloVisibleDataImpl(isHoloVisible())).isSuccessful())
+                EquivalentMatter.w("Was not able to safe %s", CustomNBT.HOLO_VISIBLE.getName());
+        }
+        if (owner != null) {
+            if (!te.offer(new DeviceOwnerDataImpl(getOwner())).isSuccessful())
+                EquivalentMatter.w("Was not able to safe %s", CustomNBT.DEVICE_OWNER.getName());
+        } else if (te.getKeys().contains(CustomNBT.DEVICE_OWNER)) {
+            te.remove(CustomNBT.DEVICE_OWNER);
+        }
+    }
+    public void loadNBT() {
+        //restore saved values
+        TileEntity te = baseLocation.getRelative(Direction.UP).getTileEntity().get();
+        te.get(CustomNBT.EMC).ifPresent(this::setEMC);
+        hideText = !te.get(CustomNBT.HOLO_VISIBLE).orElse(true);
+        setOwner(te.get(CustomNBT.DEVICE_OWNER).orElse(null));
     }
 }

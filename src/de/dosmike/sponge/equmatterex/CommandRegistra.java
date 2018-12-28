@@ -1,5 +1,6 @@
 package de.dosmike.sponge.equmatterex;
 
+import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -12,7 +13,6 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyle;
 import org.spongepowered.api.text.format.TextStyles;
 
 import java.math.BigInteger;
@@ -33,7 +33,7 @@ public class CommandRegistra {
                         throw new CommandException(Text.of("Calculator is currently refreshing values"));
                     if (args.hasAny("ItemType")) {
                         ItemType type = args.<ItemType>getOne("ItemType").get();
-                        Optional<BigInteger> value = Calculator.getValueFor(type);
+                        Optional<BigInteger> value = Calculator.getValueFor(ItemTypeEx.of(type));
 
                         if (value.isPresent()) {
                             src.sendMessage(Text.of(type.getName(), Text.NEW_LINE,
@@ -47,19 +47,19 @@ public class CommandRegistra {
                         Optional<ItemStack> item = player.getItemInHand(HandTypes.MAIN_HAND);
                         if (!item.isPresent())
                             throw new CommandException(Text.of("Please hold an item or pass a argument"));
-                        ItemType type = item.get().getType();
+                        ItemTypeEx type = ItemTypeEx.of(item.get());
                         Optional<BigInteger> value = Calculator.getValueFor(type);
 
                         if (value.isPresent()) {
-                            if (item.get().getQuantity()>1)
-                                src.sendMessage(Text.of(type.getName(), Text.NEW_LINE,
+                            if (item.get().getQuantity()>1) {
+                                src.sendMessage(Text.of(item.get().getTranslation().get(), Text.NEW_LINE,
                                         TextColors.YELLOW, "Stack EMC: ", TextColors.WHITE, (value.get().multiply(BigInteger.valueOf(item.get().getQuantity()))).toString(), Text.NEW_LINE,
                                         TextColors.YELLOW, "EMC: ", TextColors.WHITE, value.get().toString()));
-                            else
-                                src.sendMessage(Text.of(type.getName(), Text.NEW_LINE,
+                            } else
+                                src.sendMessage(Text.of(item.get().getTranslation().get(), Text.NEW_LINE,
                                         TextColors.YELLOW, "EMC: ", TextColors.WHITE, value.get().toString()));
                         } else {
-                            src.sendMessage(Text.of(type.getName(), Text.NEW_LINE,
+                            src.sendMessage(Text.of(item.get().getTranslation().get(), Text.NEW_LINE,
                                     TextColors.YELLOW, "EMC: ", TextColors.WHITE, "Unknown"));
                         }
                     } else {
@@ -75,15 +75,16 @@ public class CommandRegistra {
                 .description(Text.of("Fix the EMC value for some item, this may cause inconsistencies in recipe calculations!"))
                 .arguments(
                         GenericArguments.catalogedElement(Text.of("ItemType"), ItemType.class),
+                        GenericArguments.integer(Text.of("SubType")),
                         GenericArguments.bigInteger(Text.of("NewValue"))
                 ).executor((src,args)->{
                     if (Calculator.isCalculating())
                         throw new CommandException(Text.of("Calculator is currently refreshing values"));
-                    ItemType type = args.<ItemType>getOne("ItemType").get();
+                    ItemTypeEx type = ItemTypeEx.of(args.<ItemType>getOne("ItemType").get(), args.<Integer>getOne("SubType").get());
                     BigInteger newVal = args.<BigInteger>getOne("NewValue").get();
 
                     Calculator.setFixCost(type, newVal);
-                    src.sendMessage(Text.of("Set ", TextColors.AQUA, type.getName(), TextColors.RESET, " (", type.getName(), ") to ", TextColors.YELLOW, "EMC ", TextColors.RESET, newVal.toString(), Text.NEW_LINE,
+                    src.sendMessage(Text.of("Set ", TextColors.AQUA, type.getId(), TextColors.RESET, " (", type.itemStack().getTranslation().get(), ") to ", TextColors.YELLOW, "EMC ", TextColors.RESET, newVal.toString(), Text.NEW_LINE,
                             "It's recommended to ", Text.builder("/rebuildEMC").style(TextStyles.UNDERLINE).color(TextColors.BLUE).onClick(TextActions.runCommand("/rebuildEMC")).build(), " after you're done editing."));
 
                     return CommandResult.success();
@@ -94,14 +95,15 @@ public class CommandRegistra {
                 .permission("equmatex.command.resetemc")
                 .description(Text.of("Set this item-types EMC value to be recalculated again."))
                 .arguments(
-                        GenericArguments.catalogedElement(Text.of("ItemType"), ItemType.class)
+                        GenericArguments.catalogedElement(Text.of("ItemType"), ItemType.class),
+                        GenericArguments.integer(Text.of("SubType"))
                 ).executor((src,args)->{
                     if (Calculator.isCalculating())
                         throw new CommandException(Text.of("Calculator is currently refreshing values"));
-                    ItemType type = args.<ItemType>getOne("ItemType").get();
+                    ItemTypeEx type = ItemTypeEx.of(args.<ItemType>getOne("ItemType").get(), args.<Integer>getOne("SubType").get());
 
                     Calculator.resetCost(type);
-                    src.sendMessage(Text.of("Reset ", TextColors.AQUA, type.getName(), TextColors.RESET, " (", type.getName(), ").", Text.NEW_LINE,
+                    src.sendMessage(Text.of("Reset ", TextColors.AQUA, type.getId(), TextColors.RESET, " (", type.itemStack().getTranslation().get(), ").", Text.NEW_LINE,
                             "The value is no long fixed and will update the next time you ", Text.builder("/rebuildEMC").style(TextStyles.UNDERLINE).color(TextColors.BLUE).onClick(TextActions.runCommand("/rebuildEMC")).build(), "."));
 
                     return CommandResult.success();
@@ -117,6 +119,7 @@ public class CommandRegistra {
                     if (Calculator.isCalculating())
                         throw new CommandException(Text.of("Calculator is currently refreshing values"));
 
+                    Calculator.resetAndDefaults();
                     EquivalentMatter.getInstance().invokeAsyncCalculation()
                             .whenCompleteAsync((v,e)->{
                                 if (e != null) {

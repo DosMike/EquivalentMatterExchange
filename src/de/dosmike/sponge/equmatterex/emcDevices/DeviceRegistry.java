@@ -2,20 +2,21 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
-import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
-import de.dosmike.sponge.equmatterex.customNBT.impl.EMCStoreDataImpl;
-import de.dosmike.sponge.equmatterex.customNBT.impl.HoloVisibleDataImpl;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.block.tileentity.TileEntity;
+import org.spongepowered.api.block.tileentity.DaylightDetector;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.ArmorStand;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,32 +25,45 @@ public class DeviceRegistry {
     private static Map<Location<World>, Device> deviceMap = new HashMap<>();
     private static final Object deviceLock = new Object();
 
+    private static Map<Class<? extends Device>, DevicePermission> permissions = new HashMap<>();
+    static {
+        permissions.put(Collector.class, new DevicePermission(Device.Type.COLLECTOR, false, false));
+        permissions.put(Condenser.class, new DevicePermission(Device.Type.CONDENSER, false, false));
+        permissions.put(TransmutationTable.class, new DevicePermission(Device.Type.TRANSMUTATION_TABLE, false, false));
+    }
+    public static DevicePermission getPermissions(Device device) {
+        Class<? extends Device> clz = device.getClass();
+        return permissions.get(clz);
+    }
+    public static DevicePermission getPermissions(Class<? extends Device> device) {
+        return permissions.get(device);
+    }
+
     /** build devices from main block at chunk load */
     public static void onLoadChunk(Chunk chunk) {
         synchronized (deviceLock) {
-            Vector3i min = chunk.getBlockMin(), max = chunk.getBlockMax();
-            for (int y = min.getY(); y <= max.getY(); y++)
-                for (int z = min.getZ(); z <= max.getZ(); z++)
-                    for (int x = min.getX(); x <= max.getX(); x++) {
-                        BlockState inspect = chunk.getBlock(x, y, z);
-                        Location<World> globalLocation = chunk.getWorld().getLocation(x, y, z);
-                        Optional<Device> device = Optional.empty();
-                        if (inspect.getType().equals(BlockTypes.CHEST))
-                            device = tryBuild(Device.Type.CONDENSOR, globalLocation);
-                        else if (inspect.getType().equals(BlockTypes.FURNACE) ||
-                                inspect.getType().equals(BlockTypes.LIT_FURNACE))
-                            device = tryBuild(Device.Type.COLLECTOR, globalLocation);
+            //should be faster than scanning blockwise
+            chunk.getTileEntities(te->te instanceof DaylightDetector)
+                    .forEach(te->loadDeviceFromLocation(te.getLocation())
+            );
+        }
+    }
+    private static void loadDeviceFromLocation(Location<World> location) {
+        Location<World> globalLocation = location.getRelative(Direction.DOWN);
+        BlockState inspect = globalLocation.getBlock();
+        Optional<Device> device = Optional.empty();
+        if (inspect.getType().equals(BlockTypes.CHEST))
+            device = tryBuild(Device.Type.CONDENSER, globalLocation);
+        else if (inspect.getType().equals(BlockTypes.FURNACE) ||
+                inspect.getType().equals(BlockTypes.LIT_FURNACE))
+            device = tryBuild(Device.Type.COLLECTOR, globalLocation);
+        else if (inspect.getType().equals(BlockTypes.CRAFTING_TABLE))
+            device = tryBuild(Device.Type.TRANSMUTATION_TABLE, globalLocation);
 
-                        if (device.isPresent()) {
-                            deviceMap.put(globalLocation, device.get());
-                            //restore saved values
-                            final Device fDevice = device.get();
-                            globalLocation.getRelative(Direction.UP).getTileEntity().get()
-                                    .get(CustomNBT.EMC).ifPresent(fDevice::setEMC);
-                            globalLocation.getRelative(Direction.UP).getTileEntity().get()
-                                    .get(CustomNBT.HOLO_VISIBLE).ifPresent(visible->fDevice.hideText=!visible);
-                        }
-                    }
+        if (device.isPresent()) {
+            device.get().loadNBT();
+            //store device as loaded in map
+            deviceMap.put(globalLocation, device.get());
         }
     }
 
@@ -68,7 +82,16 @@ public class DeviceRegistry {
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
             for (Location<World> target : devices) {
-                deviceMap.remove(target);
+                Device device = deviceMap.remove(target);
+                device.safeNBT();
+
+                if (device.getType().hasHologram()) {
+                    chunk.getNearbyEntities(device.baseLocation.getPosition().add(Device.holoBaseOffset), 0.1)
+                            .stream()
+                            .filter(e -> e instanceof ArmorStand)
+                            .findAny()
+                            .ifPresent(Entity::remove);
+                }
             }
         }
     }
@@ -81,13 +104,12 @@ public class DeviceRegistry {
         BlockType type = loc.getRelative(Direction.UP).getBlockType();
         if (type.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
             type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
-            if (deviceType == Device.Type.CONDENSOR) {
-//                EquivalentMatter.l("is Condenser!");
+            if (deviceType == Device.Type.CONDENSER) {
                 return Optional.of(new Condenser(loc));
             } else if (deviceType == Device.Type.COLLECTOR) {
-//                EquivalentMatter.l("is Collector!");
                 return Optional.of(new Collector(loc));
-            }
+            } else if (deviceType == Device.Type.TRANSMUTATION_TABLE)
+                return Optional.of(new TransmutationTable(loc));
         }
         return Optional.empty();
     }
@@ -97,7 +119,7 @@ public class DeviceRegistry {
      * @param loc the block that was placed
      * @param blockAtLoc the block to assume at loc (since events may make this unfetchable from location)
      */
-    public static Optional<Device> tryPlaceDevice(Location<World> loc, BlockState blockAtLoc) {
+    public static Optional<Device> tryPlaceDevice(@Nullable Player player, Location<World> loc, BlockState blockAtLoc) {
         Location<World> base = loc;
         BlockType type = blockAtLoc.getType();
         if (type.equals(BlockTypes.DAYLIGHT_DETECTOR)  ||
@@ -107,10 +129,24 @@ public class DeviceRegistry {
         BlockType bt = base.getBlockType();
         Optional<Device> device;
         if (bt.equals(BlockTypes.CHEST)) {
-            device = tryBuild(Device.Type.CONDENSOR, base);
+            if (player != null && !permissions.get(Condenser.class).hasPermissionCreate(player)) {
+                device = Optional.empty();
+                player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Condenser"));
+            } else
+                device = tryBuild(Device.Type.CONDENSER, base);
         } else if (bt.equals(BlockTypes.FURNACE) ||
                     bt.equals(BlockTypes.LIT_FURNACE)) {
-            device = tryBuild(Device.Type.COLLECTOR, base);
+            if (player != null && !permissions.get(Collector.class).hasPermissionCreate(player)) {
+                device = Optional.empty();
+                player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Collector"));
+            } else
+                device = tryBuild(Device.Type.COLLECTOR, base);
+        } else if (bt.equals(BlockTypes.CRAFTING_TABLE)) {
+            if (player != null && !permissions.get(TransmutationTable.class).hasPermissionCreate(player)) {
+                device = Optional.empty();
+                player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Transmutation Table"));
+            } else
+                device = tryBuild(Device.Type.TRANSMUTATION_TABLE, base);
         } else {
             device = Optional.empty();
         }
@@ -127,12 +163,21 @@ public class DeviceRegistry {
      * @param blockAtLoc the block to assume at loc (since events may make this unfetchable from location)
      * @return the device that used to be there
      */
-    public static Optional<Device> tryBreakDevice(Location<World> loc, BlockState blockAtLoc) {
+    public static Optional<Device> tryBreakDevice(@Nullable Player player, Location<World> loc, BlockState blockAtLoc) {
         Location<World> base = loc;
         BlockType type = blockAtLoc.getType();
         if (type.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
             type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
             base = loc.getRelative(Direction.DOWN);
+        }
+        Optional<Device> target = findDevice(base);
+        if (!target.isPresent()) return Optional.empty();
+        Device device = target.get();
+        if (player != null) {
+            if (!device.isOwner(player) && !getPermissions(device).hasPermissionInteract(player)) {
+                player.sendMessage(Text.of(TextColors.RED, "You don't have permission to do that"));
+                return Optional.empty();
+            }
         }
         return unregisterDevice(base);
     }
@@ -157,10 +202,6 @@ public class DeviceRegistry {
                     try {
                         d.tick();
                         d.holo();
-                        //store custom data
-                        TileEntity te = d.baseLocation.getRelative(Direction.UP).getTileEntity().get();
-                        te.offer(new EMCStoreDataImpl(d.getEMC()));
-                        te.offer(new HoloVisibleDataImpl(d.isHoloVisible()));
                     } catch (Exception ee) {
                         ee.printStackTrace();
                     }

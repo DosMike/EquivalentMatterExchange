@@ -25,5 +25,20 @@ end crystal. This will drastically improve the devices function.
 If you want to hide the hologram that's displaying device information, you can 
 use-click it while sneaking to toggle the hologram on and off.
 
-As of writing this there is no posibillity to limit device creation, as they do
-not store owner information.
+### Permissions and commands
+
+| Permission   | Description    |
+|----- |----- |
+| equmatex.command.emc  | /emc Check the EMC value of an item-type  |
+| equmatex.command.setemc  | /setemc Fix the EMC value for some item, this may cause inconsistencies in recipe calculations!  |
+| equmatex.command.resetemc  | /resetemc Set this item-types EMC value to be recalculated again.  |
+| equmatex.command.rebuildemc  | /rebuildemc Rerun EMC value calculation. This will safe configs afterwards.  |
+| equmatex.command.reloademc  | /reloademc Reload all EMC values from config. This will not start a calculation!  |
+| equmatterex.device.collector.create  | Allows a user to create a Energy Collector  |
+| equmatterex.device.collector.sharedaccess  | Allows a user access and destroy Energy Collectors from other players  |
+| equmatterex.device.condenser.create  | Allows a user to create a Energy Condenser  |
+| equmatterex.device.condenser.sharedaccess  | Allows a user access and destroy Energy Condenser from other players  |
+| equmatterex.device.transmutation_table.create  | Allows a user to create a Transmutation Table  |
+| equmatterex.device.transmutation_table.sharedaccess  | Allows a user access and destroy Transmutation Table from other players  |
+
+The device.conf allows you to specify whether a device permission is actually used or not.

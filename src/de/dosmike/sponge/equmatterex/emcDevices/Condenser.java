@@ -1,7 +1,8 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
-import de.dosmike.sponge.equmatterex.Calculator;
+import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import de.dosmike.sponge.equmatterex.ItemFrameUtils;
+import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;
@@ -22,7 +23,7 @@ import java.util.Optional;
 public class Condenser extends Device {
 
     public Condenser(Location<World> baseBlockLocation) {
-        super(baseBlockLocation, Type.CONDENSOR);
+        super(baseBlockLocation, Type.CONDENSER);
     }
 
     private BigInteger emcStore = BigInteger.ZERO;
@@ -56,18 +57,20 @@ public class Condenser extends Device {
 
         TileEntityCarrier chest = (TileEntityCarrier) baseLocation.getTileEntity().get();
         if (baseLocation.getBlockType().equals(BlockTypes.CHEST)) {
+            ItemTypeEx tt = ItemTypeEx.of(targeted);
             Optional<ItemStack> stack = chest.getInventory()
-                    .query(QueryOperationTypes.ITEM_STACK_CUSTOM.of((s)->
-                            (!s.getType().equals(targeted.getType())) &&
-                            Calculator.getValueFor(s.getType()).isPresent()
-                    )).poll(isTier2?64:1);
+                    .query(QueryOperationTypes.ITEM_STACK_CUSTOM.of((s)->{
+                            ItemTypeEx st = ItemTypeEx.of(s);
+                            return (!st.equals(tt)) &&
+                            Calculator.getValueFor(st).isPresent();
+                    })).poll(isTier2?64:1);
             if (stack.isPresent()) {
                 emcDelta = Calculator.getValueFor(stack.get()).get();
                 emcStore = emcStore.add(emcDelta);
             }
         }
         if (emcStore.compareTo(emcTarget)>=0) {
-            ItemStack insert = ItemStack.of(targeted.getType(), 1);
+            ItemStack insert = ItemStack.builder().fromSnapshot(targeted).quantity(1).build();
             chest.getInventory().offer(insert);
             if (insert.isEmpty()) { //was accepted
                 emcStore = emcStore.subtract(emcTarget);
