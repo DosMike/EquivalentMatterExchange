@@ -9,7 +9,6 @@ import org.spongepowered.api.data.key.Key;
 import org.spongepowered.api.data.value.mutable.Value;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameRegistryEvent;
-import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.util.generator.dummy.DummyObjectProvider;
 
 import java.math.BigInteger;

@@ -1,8 +1,8 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
-import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import de.dosmike.sponge.equmatterex.ItemFrameUtils;
 import de.dosmike.sponge.equmatterex.ItemTypeEx;
+import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;

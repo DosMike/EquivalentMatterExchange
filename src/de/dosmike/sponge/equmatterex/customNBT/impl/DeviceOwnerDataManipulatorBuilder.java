@@ -1,9 +1,7 @@
 package de.dosmike.sponge.equmatterex.customNBT.impl;
 
 import de.dosmike.sponge.equmatterex.customNBT.DeviceOwnerData;
-import de.dosmike.sponge.equmatterex.customNBT.HoloVisibleData;
 import de.dosmike.sponge.equmatterex.customNBT.ImmutableDeviceOwnerData;
-import de.dosmike.sponge.equmatterex.customNBT.ImmutableHoloVisibleData;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.DataManipulatorBuilder;

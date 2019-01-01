@@ -2,7 +2,6 @@ package de.dosmike.sponge.equmatterex;
 
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataQuery;
-import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.property.item.ArmorTypeProperty;
 import org.spongepowered.api.data.property.item.ToolTypeProperty;
 import org.spongepowered.api.data.property.item.UseLimitProperty;

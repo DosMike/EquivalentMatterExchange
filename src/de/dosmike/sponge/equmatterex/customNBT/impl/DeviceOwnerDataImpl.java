@@ -1,6 +1,8 @@
 package de.dosmike.sponge.equmatterex.customNBT.impl;
 
-import de.dosmike.sponge.equmatterex.customNBT.*;
+import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
+import de.dosmike.sponge.equmatterex.customNBT.DeviceOwnerData;
+import de.dosmike.sponge.equmatterex.customNBT.ImmutableDeviceOwnerData;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataHolder;
