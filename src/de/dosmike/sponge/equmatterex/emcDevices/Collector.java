@@ -1,6 +1,7 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;
@@ -54,7 +55,7 @@ public class Collector extends Device {
         if (++secondTimer >= 20) {
             secondTimer = 0;
 
-            if (baseLocation.getRelative(Direction.UP).getBlockType().equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED))
+            if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, baseLocation.getRelative(Direction.UP)))
                 isTier2 = true;
 
             cachedLightLevel = baseLocation.getRelative(Direction.UP)

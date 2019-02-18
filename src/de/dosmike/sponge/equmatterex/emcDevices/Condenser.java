@@ -3,8 +3,8 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 import de.dosmike.sponge.equmatterex.ItemFrameUtils;
 import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
+import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.hanging.ItemFrame;
@@ -39,7 +39,7 @@ public class Condenser extends Device {
         if (++secondTimer >= 20) {
             secondTimer = 0;
 
-            if (baseLocation.getRelative(Direction.UP).getBlockType().equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED))
+            if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, baseLocation.getRelative(Direction.UP)))
                 isTier2 = true;
 
             Optional<ItemFrame> item = ItemFrameUtils.getItemFramFrom(baseLocation, baseLocation.getBlock().get(Keys.DIRECTION).orElse(Direction.NONE));
@@ -56,7 +56,7 @@ public class Condenser extends Device {
         if (targeted==null || emcTarget.compareTo(BigInteger.ZERO)<=0) return;
 
         TileEntityCarrier chest = (TileEntityCarrier) baseLocation.getTileEntity().get();
-        if (baseLocation.getBlockType().equals(BlockTypes.CHEST)) {
+        if (ForgeHelper.isOfType(ForgeHelper.CHEST, baseLocation)) {
             ItemTypeEx tt = ItemTypeEx.of(targeted);
             Optional<ItemStack> stack = chest.getInventory()
                     .query(QueryOperationTypes.ITEM_STACK_CUSTOM.of((s)->{
@@ -96,9 +96,9 @@ public class Condenser extends Device {
     /** item frame not required for validity, only for producing stuff */
     public static boolean validateStructure(Location<World> location) {
         BlockType typeAbove = location.getRelative(Direction.UP).getBlockType();
-        if (location.getBlockType().equals(BlockTypes.CHEST) &&
-            typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-            typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.CHEST, location) &&
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, typeAbove) ||
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, typeAbove)) {
 //            EquivalentMatter.l("is Condenser!");
             return true;
         }

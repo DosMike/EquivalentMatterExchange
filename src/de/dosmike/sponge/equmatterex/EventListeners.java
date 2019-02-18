@@ -1,6 +1,7 @@
 package de.dosmike.sponge.equmatterex;
 
 import de.dosmike.sponge.equmatterex.emcDevices.*;
+import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockType;
@@ -58,22 +59,22 @@ public class EventListeners {
                 !tranny.getOriginal().getState().getType().equals(BlockTypes.AIR)||
                 !tranny.getFinal().getLocation().isPresent()) continue;
             //prevent double-chesting devices
-            if (tranny.getFinal().getState().getType().equals(BlockTypes.CHEST)) {
+            if (ForgeHelper.isOfType(ForgeHelper.CHEST, tranny.getFinal())) {
                 for (Direction dir : around) {
                     Location<World> rel = tranny.getFinal().getLocation().get().getRelative(dir);
-                    if (rel.getBlockType().equals(BlockTypes.CHEST) &&
+                    if (ForgeHelper.isOfType(ForgeHelper.CHEST, rel) &&
                         DeviceRegistry.findDevice(rel).isPresent()) {
                         tranny.setValid(false); //prevent placing
                         continue itPlace; //don't create device
                     }
                 }
-            } else if (tranny.getFinal().getState().getType().equals(BlockTypes.DAYLIGHT_DETECTOR)) {
+            } else if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, tranny.getFinal())) {
                 Location<World> loc = tranny.getFinal().getLocation().orElse(null);
                 if (loc != null) {
                     loc = loc.getRelative(Direction.DOWN);
-                    if (loc.getBlockType().equals(BlockTypes.CHEST)) //chest below
+                    if (ForgeHelper.isOfType(ForgeHelper.CHEST, loc)) //chest below
                         for (Direction dir : around) {
-                            if (loc.getRelative(dir).getBlockType().equals(BlockTypes.CHEST)){ //there's a chest somewhere around -> double chest
+                            if (ForgeHelper.isOfType(ForgeHelper.CHEST, loc.getRelative(dir))){ //there's a chest somewhere around -> double chest
                                 tranny.setValid(false); //prevent placing
                                 continue itPlace; //don't create device
                             }
@@ -121,15 +122,15 @@ public class EventListeners {
                 isPlayerSneaking)
             isPlaceBlock = true;
 
-        if (type.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-            type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type) ||
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
             Optional<Device> device = DeviceRegistry.findDevice(block.get().getRelative(Direction.DOWN));
             if (device.isPresent())
                 if (!device.get().isOwner(player) && !DeviceRegistry.getPermissions(device.get()).hasPermissionCreate(player))
                     event.setCancelled(true);
                 else if (!isPlaceBlock) {
                     if (device.get().getType().isUpgradeable() && //check if upgradeable
-                        type.equals(BlockTypes.DAYLIGHT_DETECTOR) && //not yet upgraded
+                        ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type) && //not yet upgraded
                         handItem.orElse(ItemStack.empty()).getType().equals(ItemTypes.END_CRYSTAL)) { //upgrade item used
                         player.getInventory().query(QueryOperationTypes.INVENTORY_TYPE.of(Hotbar.class))
                                 .query(QueryOperationTypes.ITEM_TYPE.of(ItemTypes.END_CRYSTAL))

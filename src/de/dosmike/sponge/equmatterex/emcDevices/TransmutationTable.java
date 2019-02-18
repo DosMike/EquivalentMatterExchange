@@ -1,8 +1,8 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
 import de.dosmike.sponge.equmatterex.TabletView;
+import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
@@ -53,9 +53,9 @@ public class TransmutationTable extends Device {
     /** item frame not required for validity, only for producing stuff */
     public static boolean validateStructure(Location<World> location) {
         BlockType typeAbove = location.getRelative(Direction.UP).getBlockType();
-        if (location.getBlockType().equals(BlockTypes.CRAFTING_TABLE) &&
-                typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-                typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.CRAFTING_TABLE, location) &&
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, typeAbove) ||
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, typeAbove)) {
             return true;
         }
         return false;

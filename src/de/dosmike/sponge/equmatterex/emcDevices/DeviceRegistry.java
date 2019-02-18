@@ -2,9 +2,9 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
+import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.DaylightDetector;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.ArmorStand;
@@ -52,12 +52,12 @@ public class DeviceRegistry {
         Location<World> globalLocation = location.getRelative(Direction.DOWN);
         BlockState inspect = globalLocation.getBlock();
         Optional<Device> device = Optional.empty();
-        if (inspect.getType().equals(BlockTypes.CHEST))
+        if (ForgeHelper.isOfType(ForgeHelper.CHEST, inspect))
             device = tryBuild(Device.Type.CONDENSER, globalLocation);
-        else if (inspect.getType().equals(BlockTypes.FURNACE) ||
-                inspect.getType().equals(BlockTypes.LIT_FURNACE))
+        else if (ForgeHelper.isOfType(ForgeHelper.FURNACE, inspect) ||
+                ForgeHelper.isOfType(ForgeHelper.LIT_FURNACE, inspect))
             device = tryBuild(Device.Type.COLLECTOR, globalLocation);
-        else if (inspect.getType().equals(BlockTypes.CRAFTING_TABLE))
+        else if (ForgeHelper.isOfType(ForgeHelper.CRAFTING_TABLE, inspect))
             device = tryBuild(Device.Type.TRANSMUTATION_TABLE, globalLocation);
 
         if (device.isPresent()) {
@@ -102,8 +102,8 @@ public class DeviceRegistry {
      */
     public static Optional<Device> tryBuild(Device.Type deviceType, Location<World> loc){
         BlockType type = loc.getRelative(Direction.UP).getBlockType();
-        if (type.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-            type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type) ||
+                ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
             if (deviceType == Device.Type.CONDENSER) {
                 return Optional.of(new Condenser(loc));
             } else if (deviceType == Device.Type.COLLECTOR) {
@@ -122,26 +122,26 @@ public class DeviceRegistry {
     public static Optional<Device> tryPlaceDevice(@Nullable Player player, Location<World> loc, BlockState blockAtLoc) {
         Location<World> base = loc;
         BlockType type = blockAtLoc.getType();
-        if (type.equals(BlockTypes.DAYLIGHT_DETECTOR)  ||
-            type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type)  ||
+                ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
             base = loc.getRelative(Direction.DOWN);
         }
         BlockType bt = base.getBlockType();
         Optional<Device> device;
-        if (bt.equals(BlockTypes.CHEST)) {
+        if (ForgeHelper.isOfType(ForgeHelper.CHEST, bt)) {
             if (player != null && !permissions.get(Condenser.class).hasPermissionCreate(player)) {
                 device = Optional.empty();
                 player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Condenser"));
             } else
                 device = tryBuild(Device.Type.CONDENSER, base);
-        } else if (bt.equals(BlockTypes.FURNACE) ||
-                    bt.equals(BlockTypes.LIT_FURNACE)) {
+        } else if (ForgeHelper.isOfType(ForgeHelper.FURNACE, bt) ||
+                    ForgeHelper.isOfType(ForgeHelper.LIT_FURNACE, bt)) {
             if (player != null && !permissions.get(Collector.class).hasPermissionCreate(player)) {
                 device = Optional.empty();
                 player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Collector"));
             } else
                 device = tryBuild(Device.Type.COLLECTOR, base);
-        } else if (bt.equals(BlockTypes.CRAFTING_TABLE)) {
+        } else if (ForgeHelper.isOfType(ForgeHelper.CRAFTING_TABLE, bt)) {
             if (player != null && !permissions.get(TransmutationTable.class).hasPermissionCreate(player)) {
                 device = Optional.empty();
                 player.sendMessage(Text.of(TextColors.RED, "You are not allowed to build a Transmutation Table"));
@@ -166,8 +166,8 @@ public class DeviceRegistry {
     public static Optional<Device> tryBreakDevice(@Nullable Player player, Location<World> loc, BlockState blockAtLoc) {
         Location<World> base = loc;
         BlockType type = blockAtLoc.getType();
-        if (type.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-            type.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type) ||
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
             base = loc.getRelative(Direction.DOWN);
         }
         Optional<Device> target = findDevice(base);

@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.2", authors={"DosMike"})
 public class EquivalentMatter {
@@ -156,6 +157,7 @@ public class EquivalentMatter {
 					.build();
 			ConfigurationNode root = loader.load();
 			if (root.isVirtual()) return false;
+			root.getChildrenMap().keySet().stream().map(Object::toString).collect(Collectors.toList());
 
 			root.getNode("presets").getChildrenMap().forEach((key, value)->{
 				ItemTypeEx type = ItemTypeEx.valueOf(key.toString()).orElseThrow(()->new DeserializationException("No ItemType "+key.toString()+" was recognised!"));
