@@ -1,6 +1,5 @@
 package de.dosmike.sponge.equmatterex.util;
 
-import de.dosmike.sponge.equmatterex.EquivalentMatter;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -19,7 +18,7 @@ public class ForgeHelper {
     public static boolean isOfType(String type, BlockType test) {
         if (type == null) return test == null; else if (test == null) return false;
         String testId = test.getId();
-        EquivalentMatter.l("Comparing %s and %s", type, testId);
+//        EquivalentMatter.l("Comparing %s and %s", type, testId);
         return type.equals(testId);
     }
 

@@ -99,7 +99,7 @@ public class TabletView {
                                 TabletView.this.player.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, SoundCategories.PLAYER, TabletView.this.player.getPosition(), 1.0, 1.0);
                                 TabletView.this.player.sendMessage(Text.of("You learned ", TextColors.AQUA, slotAfter.getType().getName(), TextColors.RESET));
                             } else {
-                                EquivalentMatter.l("%s check knowledge for %s: known", TabletView.this.player.getName(), slotAfter.getTranslation().get());
+//                                EquivalentMatter.l("%s check knowledge for %s: known", TabletView.this.player.getName(), slotAfter.getTranslation().get());
                             }
                             BigInteger gain = burnValue.get().subtract(takeValue.get());
                             if (gain.compareTo(BigInteger.ZERO) > 0) {
