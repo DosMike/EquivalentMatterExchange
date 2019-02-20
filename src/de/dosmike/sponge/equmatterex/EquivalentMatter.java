@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.3.1", authors={"DosMike"})
+@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.3.2", authors={"DosMike"})
 public class EquivalentMatter {
 	
 	public static void main(String[] args) { System.err.println("This plugin can not be run as executable!"); }

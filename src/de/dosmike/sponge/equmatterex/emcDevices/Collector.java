@@ -137,10 +137,10 @@ public class Collector extends Device {
     public static boolean validateStructure(Location<World> location) {
         BlockType typeAbove = location.getRelative(Direction.UP).getBlockType();
         BlockType type = location.getBlockType();
-        if ((type.equals(BlockTypes.FURNACE) ||
-            type.equals(BlockTypes.LIT_FURNACE)) &&
-            typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR) ||
-            typeAbove.equals(BlockTypes.DAYLIGHT_DETECTOR_INVERTED)) {
+        if ((ForgeHelper.isOfType(ForgeHelper.FURNACE, type) ||
+            ForgeHelper.isOfType(ForgeHelper.LIT_FURNACE, type)) &&
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, typeAbove) ||
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, typeAbove)) {
             return true;
         }
         return false;
