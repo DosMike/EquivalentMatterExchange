@@ -2,6 +2,7 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
+import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -247,5 +248,4 @@ public class DeviceRegistry {
             return Optional.ofNullable(deviceMap.get(loc));
         }
     }
-
 }

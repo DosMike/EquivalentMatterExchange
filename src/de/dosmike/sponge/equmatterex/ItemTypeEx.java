@@ -19,14 +19,14 @@ public class ItemTypeEx {
     private static final DataQuery unsafeData = DataQuery.of("UnsafeDamage");
     private static final Pattern serial = Pattern.compile("^((?:[a-z][a-z0-9_]*[:])?[a-z][a-z0-9_]*)(?:[|]([0-9]+))?$");
 
-    private ItemType type;
+    private String type; //guaranteed to be existing type, as object is only constructable via ItemType
     private int damage;
 
     ItemTypeEx(ItemType itemType) {
         this(itemType, 0);
     }
     ItemTypeEx(ItemType itemType, int damage) {
-        this.type = itemType;
+        this.type = itemType.getId();
         if (itemType.getDefaultProperty(ToolTypeProperty.class).isPresent() ||
             itemType.getDefaultProperty(ArmorTypeProperty.class).isPresent() ||
             itemType.getDefaultProperty(UseLimitProperty.class).isPresent() ||
@@ -64,7 +64,7 @@ public class ItemTypeEx {
 
     public ItemStack itemStack() {
         return ItemStack.builder()
-                .fromContainer(ItemStack.of(type, 1)
+                .fromContainer(ItemStack.of(getType(), 1)
                         .toContainer()
                         .set(unsafeData, damage)
                 )
@@ -72,7 +72,7 @@ public class ItemTypeEx {
     }
     public ItemStack itemStack(int quantity) {
         return ItemStack.builder()
-                .fromContainer(ItemStack.of(type, 1)
+                .fromContainer(ItemStack.of(getType(), 1)
                         .toContainer()
                         .set(unsafeData, damage)
                 )
@@ -85,7 +85,7 @@ public class ItemTypeEx {
     public boolean equals(Object obj) {
         if (!(obj instanceof ItemTypeEx)) return false;
         ItemTypeEx other = (ItemTypeEx)obj;
-        return other.type.equals(type) && other.damage == damage;
+        return other.type.equalsIgnoreCase(type) && other.damage == damage;
     }
 
     @Override
@@ -101,13 +101,13 @@ public class ItemTypeEx {
     }
 
     public ItemType getType() {
-        return type;
+        return Sponge.getRegistry().getType(ItemType.class, type).get();
     }
     public int getDamage() {
         return damage;
     }
     public String getId() {
-        return String.format("%s|%d", type.getId(), damage);
+        return String.format("%s|%d", type, damage);
     }
     @Override
     public String toString() {

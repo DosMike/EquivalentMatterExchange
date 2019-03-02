@@ -1,12 +1,15 @@
 package de.dosmike.sponge.equmatterex;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.sun.xml.internal.ws.encoding.soap.DeserializationException;
+import com.typesafe.config.ConfigParseOptions;
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import de.dosmike.sponge.equmatterex.calculator.WorldConversion;
 import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
 import de.dosmike.sponge.equmatterex.emcDevices.*;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -31,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.3.2", authors={"DosMike"})
+@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.4", authors={"DosMike"})
 public class EquivalentMatter {
 	
 	public static void main(String[] args) { System.err.println("This plugin can not be run as executable!"); }
@@ -106,6 +109,7 @@ public class EquivalentMatter {
 	 * @return success
 	 */
 	public boolean loadConfigs() {
+		getConfigDir();
 		boolean firstRun = new File(privateConfigDir.toFile(), "defaultValues.conf").exists();
 		if (firstRun) {
 			try {
@@ -114,7 +118,6 @@ public class EquivalentMatter {
 				Sponge.getAssetManager().getAsset(this, "devices.conf")
 						.get().copyToFile(privateConfigDir.resolve("devices.conf"));
 				Calculator.resetAndDefaults(); //generate defaultValues.conf
-				privateConfigDir.resolve("player").toFile().mkdirs();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -122,30 +125,43 @@ public class EquivalentMatter {
 
 		try {
 			ConfigurationLoader<CommentedConfigurationNode> loader = HoconConfigurationLoader.builder()
-					.setPath(getConfigDir().resolve("plugin.conf"))
+					.setPath(privateConfigDir.resolve("devices.conf"))
+					.setParseOptions(ConfigParseOptions.defaults())
 					.build();
-			ConfigurationNode root = loader.load();
+			ConfigurationNode root = loader.load(ConfigurationOptions.defaults());
 
-			ConfigurationNode cfgDevice = root.getNode(Device.Type.COLLECTOR);
+			ConfigurationNode cfgDevice = root.getNode(Device.Type.COLLECTOR.toString().toUpperCase());
 			DeviceRegistry.getPermissions(Collector.class).setPermissionCreate(
 					cfgDevice.getNode("requireBuildPermission").getBoolean(false)
 			);
 			DeviceRegistry.getPermissions(Collector.class).setPermissionAccess(
 					cfgDevice.getNode("requireSharedAccessPermission").getBoolean(false)
 			);
-			cfgDevice = root.getNode(Device.Type.CONDENSER);
+			cfgDevice = root.getNode(Device.Type.CONDENSER.toString().toUpperCase());
 			DeviceRegistry.getPermissions(Condenser.class).setPermissionCreate(
 					cfgDevice.getNode("requireBuildPermission").getBoolean(false)
 			);
 			DeviceRegistry.getPermissions(Condenser.class).setPermissionAccess(
 					cfgDevice.getNode("requireSharedAccessPermission").getBoolean(false)
 			);
-			cfgDevice = root.getNode(Device.Type.TRANSMUTATION_TABLE);
+			Condenser.loadItemTypeBlacklist(
+					cfgDevice.getNode("listItemType").getList(TypeToken.of(String.class)),
+					cfgDevice.getNode("blacklistItemTypes").getBoolean(true)
+			);
+			Condenser.loadNBTblacklist(
+					cfgDevice.getNode("listDuplicateNBT").getList(TypeToken.of(String.class)),
+					cfgDevice.getNode("blacklistDuplicateNBT").getBoolean(true)
+			);
+			cfgDevice = root.getNode(Device.Type.TRANSMUTATION_TABLE.toString().toUpperCase());
 			DeviceRegistry.getPermissions(TransmutationTable.class).setPermissionCreate(
 					cfgDevice.getNode("requireBuildPermission").getBoolean(false)
 			);
 			DeviceRegistry.getPermissions(TransmutationTable.class).setPermissionAccess(
 					cfgDevice.getNode("requireSharedAccessPermission").getBoolean(false)
+			);
+			TransmutationTable.loadItemTypeBlacklist(
+					cfgDevice.getNode("listItemType").getList(TypeToken.of(String.class)),
+					cfgDevice.getNode("blacklistItemTypes").getBoolean(true)
 			);
 
 		} catch (Exception e) {
@@ -153,9 +169,9 @@ public class EquivalentMatter {
 		}
 		try {
 			ConfigurationLoader<CommentedConfigurationNode> loader = HoconConfigurationLoader.builder()
-					.setPath(getConfigDir().resolve("emcValues.conf"))
+					.setPath(privateConfigDir.resolve("emcValues.conf"))
 					.build();
-			ConfigurationNode root = loader.load();
+			ConfigurationNode root = loader.load(ConfigurationOptions.defaults());
 			if (root.isVirtual()) return false;
 			root.getChildrenMap().keySet().stream().map(Object::toString).collect(Collectors.toList());
 

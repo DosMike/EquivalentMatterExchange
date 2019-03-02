@@ -1,6 +1,7 @@
 package de.dosmike.sponge.equmatterex;
 
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
+import org.h2.command.Command;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -32,7 +33,9 @@ public class CommandRegistra {
                     if (Calculator.isCalculating())
                         throw new CommandException(Text.of("Calculator is currently refreshing values"));
                     if (args.hasAny("ItemType")) {
-                        ItemType type = args.<ItemType>getOne("ItemType").get();
+                        ItemType type = args.<ItemType>getOne("ItemType").orElse(null);
+                        if (type == null)
+                            throw new CommandException(Text.of(TextColors.RED,"Invalid ItemType"));
                         Optional<BigInteger> value = Calculator.getValueFor(ItemTypeEx.of(type));
 
                         if (value.isPresent()) {

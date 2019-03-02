@@ -1,6 +1,7 @@
 package de.dosmike.sponge.equmatterex;
 
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
+import de.dosmike.sponge.equmatterex.emcDevices.TransmutationTable;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.sound.SoundCategories;
 import org.spongepowered.api.effect.sound.SoundTypes;
@@ -75,13 +76,17 @@ public class TabletView {
                         } else {
                             requireUpdate.set(true);
 
+                            ItemTypeEx type = ItemTypeEx.of(deltaStack);
                             if (take) {
                                 EMCAccount.withdraw(TabletView.this.player, value.get());
+                            } else if (!TransmutationTable.canLearn(type)) {
+                                transaction.setValid(false);
+                                event.setCancelled(true);
+                                TabletView.this.player.sendMessage(Text.of("The mighty gods decided that this item shall not be learned"));
                             } else {
-                                if (EMCAccount.learn(TabletView.this.player, ItemTypeEx.of(deltaStack))) {
+                                if (EMCAccount.learn(TabletView.this.player, type)) {
                                     TabletView.this.player.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, SoundCategories.PLAYER, TabletView.this.player.getPosition(), 1.0, 1.0);
                                     TabletView.this.player.sendMessage(Text.of("You learned ", TextColors.AQUA, slotAfter.getType().getName(), TextColors.RESET));
-                                } else {
                                 }
                                 EMCAccount.deposit(TabletView.this.player, value.get());
                             }

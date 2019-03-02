@@ -2,6 +2,7 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
+import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
 import de.dosmike.sponge.equmatterex.customNBT.impl.DeviceOwnerDataImpl;
 import de.dosmike.sponge.equmatterex.customNBT.impl.EMCStoreDataImpl;
@@ -19,10 +20,11 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigInteger;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public abstract class Device {
-
 
     public enum Type {
         COLLECTOR(true, true),
@@ -180,4 +182,5 @@ public abstract class Device {
         hideText = !te.get(CustomNBT.HOLO_VISIBLE).orElse(true);
         setOwner(te.get(CustomNBT.DEVICE_OWNER).orElse(null));
     }
+
 }

@@ -1,7 +1,10 @@
 package de.dosmike.sponge.equmatterex.emcDevices;
 
+import de.dosmike.sponge.equmatterex.EquivalentMatter;
+import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.TabletView;
 import de.dosmike.sponge.equmatterex.util.ForgeHelper;
+import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.Direction;
@@ -9,8 +12,15 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigInteger;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public class TransmutationTable extends Device {
+
+    private static Set<ItemTypeEx> listItemTypes = new HashSet<>();
+    private static boolean blacklistItemTypes = true;
 
     public TransmutationTable(Location<World> baseBlockLocation) {
         super(baseBlockLocation, Type.TRANSMUTATION_TABLE);
@@ -59,5 +69,25 @@ public class TransmutationTable extends Device {
             return true;
         }
         return false;
+    }
+
+    public static void loadItemTypeBlacklist(Collection<String> listItemTypes, boolean blacklistItemTypes) {
+        TransmutationTable.listItemTypes.clear();
+        if (listItemTypes != null)
+            for (String s : listItemTypes) {
+                Optional<ItemTypeEx> type = ItemTypeEx.valueOf(s);
+                if (!type.isPresent())
+                    EquivalentMatter.w("Invalid Item Type (Condenser listItemType) %s", s);
+                else
+                    TransmutationTable.listItemTypes.add(type.get());
+            }
+        TransmutationTable.blacklistItemTypes = blacklistItemTypes;
+    }
+
+    public static boolean canLearn(ItemTypeEx type) {
+        if (blacklistItemTypes)
+            return !listItemTypes.contains(type);
+        else
+            return listItemTypes.contains(type);
     }
 }

@@ -2,7 +2,7 @@
   "modid": "equmatterex",
   "name": "EquivalentMatterExchange",
   "description": "Go build fancy stuff instead of farming",
-  "version": "0.3.2",
+  "version": "0.4",
   "url": "",
   "authorList": [ "DosMike" ],
   "requiredMods": [ "spongeapi@7.0.0" ],
