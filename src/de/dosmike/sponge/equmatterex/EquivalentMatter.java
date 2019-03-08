@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.4", authors={"DosMike"})
+@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.5", authors={"DosMike"})
 public class EquivalentMatter {
 	
 	public static void main(String[] args) { System.err.println("This plugin can not be run as executable!"); }
@@ -152,6 +152,9 @@ public class EquivalentMatter {
 					cfgDevice.getNode("listDuplicateNBT").getList(TypeToken.of(String.class)),
 					cfgDevice.getNode("blacklistDuplicateNBT").getBoolean(true)
 			);
+			Condenser.setEfficiency(
+					cfgDevice.getNode("efficiency").getDouble(1.0)
+			);
 			cfgDevice = root.getNode(Device.Type.TRANSMUTATION_TABLE.toString().toUpperCase());
 			DeviceRegistry.getPermissions(TransmutationTable.class).setPermissionCreate(
 					cfgDevice.getNode("requireBuildPermission").getBoolean(false)
@@ -162,6 +165,9 @@ public class EquivalentMatter {
 			TransmutationTable.loadItemTypeBlacklist(
 					cfgDevice.getNode("listItemType").getList(TypeToken.of(String.class)),
 					cfgDevice.getNode("blacklistItemTypes").getBoolean(true)
+			);
+			TransmutationTable.setEfficiency(
+					cfgDevice.getNode("efficiency").getDouble(1.0)
 			);
 
 		} catch (Exception e) {

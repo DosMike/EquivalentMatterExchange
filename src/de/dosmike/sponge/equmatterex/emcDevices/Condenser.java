@@ -23,6 +23,7 @@ import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
@@ -48,6 +49,7 @@ public class Condenser extends Device {
     private static boolean blacklistItemTypes = true;
     private static Set<ItemTypeEx> listIgnoreNBT = new HashSet<>();
     private static boolean blacklistIgnoreNBT = true;
+    private static double efficiency = 1.0;
 
     private static final ParticleEffect angryPFX = ParticleEffect.builder()
             .type(ParticleTypes.ANGRY_VILLAGER)
@@ -101,7 +103,9 @@ public class Condenser extends Device {
                             Calculator.getValueFor(st).isPresent();
                     })).poll(isTier2?64:1);
             if (stack.isPresent()) {
-                emcDelta = Calculator.getValueFor(stack.get()).get();
+                emcDelta = BigDecimal.valueOf(efficiency).multiply(
+                        new BigDecimal(Calculator.getValueFor(stack.get()).get())
+                ).toBigInteger();
                 emcStore = emcStore.add(emcDelta);
             }
         }
@@ -232,6 +236,13 @@ public class Condenser extends Device {
             return !listItemTypes.contains(type);
         else
             return listItemTypes.contains(type);
+    }
+
+    public static double getEfficiency() {
+        return efficiency;
+    }
+    public static void setEfficiency(double efficiency) {
+        Condenser.efficiency = Math.max(0.0, Math.min(1.0, efficiency));
     }
 
 }

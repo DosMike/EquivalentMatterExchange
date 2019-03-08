@@ -49,6 +49,19 @@ public class EMCAccount {
             }
         }
     }
+    public static boolean unlearn(Player player, ItemTypeEx item) {
+        if (item.getType().equals(ItemTypes.AIR)) return true;
+        synchronized (knowledgeMutex) {
+            List<ItemTypeEx> known = knowledge.getOrDefault(player.getUniqueId(), new LinkedList<>());
+            if (known.contains(item)) {
+                known.remove(item);
+                knowledge.put(player.getUniqueId(), known);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 //    private static boolean contains (Collection<ItemType> set, ItemType one) {
 //        for (ItemType item : set) {
 //            if (item.getId().equals(one.getId()))

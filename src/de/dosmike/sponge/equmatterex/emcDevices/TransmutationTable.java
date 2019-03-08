@@ -21,6 +21,7 @@ public class TransmutationTable extends Device {
 
     private static Set<ItemTypeEx> listItemTypes = new HashSet<>();
     private static boolean blacklistItemTypes = true;
+    private static double efficiency = 1.0;
 
     public TransmutationTable(Location<World> baseBlockLocation) {
         super(baseBlockLocation, Type.TRANSMUTATION_TABLE);
@@ -89,5 +90,12 @@ public class TransmutationTable extends Device {
             return !listItemTypes.contains(type);
         else
             return listItemTypes.contains(type);
+    }
+
+    public static double getEfficiency() {
+        return efficiency;
+    }
+    public static void setEfficiency(double efficiency) {
+        TransmutationTable.efficiency = Math.max(0.0, Math.min(1.0, efficiency));
     }
 }

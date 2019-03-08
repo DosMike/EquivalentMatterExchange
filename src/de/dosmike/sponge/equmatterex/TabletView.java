@@ -18,6 +18,7 @@ import org.spongepowered.api.item.inventory.property.SlotIndex;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Optional;
@@ -88,14 +89,25 @@ public class TabletView {
                                     TabletView.this.player.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, SoundCategories.PLAYER, TabletView.this.player.getPosition(), 1.0, 1.0);
                                     TabletView.this.player.sendMessage(Text.of("You learned ", TextColors.AQUA, slotAfter.getType().getName(), TextColors.RESET));
                                 }
-                                EMCAccount.deposit(TabletView.this.player, value.get());
+                                BigInteger burnValue = BigDecimal.valueOf(TransmutationTable.getEfficiency()).multiply(
+                                        new BigDecimal(value.get())
+                                ).toBigInteger();
+                                EMCAccount.deposit(TabletView.this.player, burnValue);
                             }
                         }
                     } else {
                         // "burned" was stack after, taken was stack before
-                        Optional<BigInteger> burnValue = Calculator.getValueFor(slotAfter);
+                        Optional<BigInteger> burnValue = Calculator.getValueFor(slotAfter).map(v->
+                                BigDecimal.valueOf(TransmutationTable.getEfficiency()).multiply(
+                                        new BigDecimal(v)
+                                ).toBigInteger()
+                        );
                         Optional<BigInteger> takeValue = Calculator.getValueFor(slotBefore);
-                        if (!burnValue.isPresent() || burnValue.get().compareTo(BigInteger.ZERO)<=0) {
+                        if (!takeValue.isPresent()) {
+                            transaction.setValid(false);
+                            event.setCancelled(true);
+                            EMCAccount.unlearn(TabletView.this.player, ItemTypeEx.of(slotBefore));
+                        } else if (!burnValue.isPresent() || burnValue.get().compareTo(BigInteger.ZERO)<=0) {
                             transaction.setValid(false);
                             event.setCancelled(true);
                         } else {
