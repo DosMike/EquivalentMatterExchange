@@ -4,7 +4,6 @@ import de.dosmike.sponge.equmatterex.EquivalentMatter;
 import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.TabletView;
 import de.dosmike.sponge.equmatterex.util.ForgeHelper;
-import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.Direction;

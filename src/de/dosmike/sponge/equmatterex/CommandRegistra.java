@@ -1,7 +1,6 @@
 package de.dosmike.sponge.equmatterex;
 
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
-import org.h2.command.Command;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;

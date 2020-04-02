@@ -2,7 +2,6 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
-import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
 import de.dosmike.sponge.equmatterex.customNBT.impl.DeviceOwnerDataImpl;
 import de.dosmike.sponge.equmatterex.customNBT.impl.EMCStoreDataImpl;
@@ -10,18 +9,16 @@ import de.dosmike.sponge.equmatterex.customNBT.impl.HoloVisibleDataImpl;
 import org.apache.commons.lang3.NotImplementedException;
 import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.ArmorStand;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 public abstract class Device {
@@ -61,10 +58,16 @@ public abstract class Device {
     public UUID getOwner() {
         return owner;
     }
+    //cache for armorstand entities, so holo() does not need to search every time
+    private UUID holoEntityIDCache = null;
+    private Vector3d holoPositionCache;
+    private static final float holoScanDistance = 0.4f;
+    protected static final Vector3d holoBaseOffset = new Vector3d(0.5, 1.1, 0.5);
 
     public Device(Location<World> baseBlockLocation, Type type) {
         this.baseLocation = baseBlockLocation;
         this.type = type;
+        this.holoPositionCache = this.baseLocation.getPosition().add(holoBaseOffset);
 //        this.owner = owner;
     }
     /** for loading purposes */
@@ -84,11 +87,14 @@ public abstract class Device {
         if (!type.hasHologram()) return;
         hideText =! visible;
         if (hideText) {
-            baseLocation.getExtent().getNearbyEntities(baseLocation.getPosition().add(holoBaseOffset), 0.1)
+            ArmorStand stand = null;
+            if (holoEntityIDCache != null) stand = (ArmorStand) baseLocation.getExtent().getEntity(holoEntityIDCache)
+                    .filter(e -> e instanceof ArmorStand).orElse(null);
+            if (stand == null) stand = (ArmorStand)baseLocation.getExtent().getNearbyEntities(holoPositionCache,holoScanDistance)
                     .stream()
                     .filter(e -> e instanceof ArmorStand)
-                    .findAny()
-                    .ifPresent(Entity::remove);
+                    .findAny().orElse(null);
+            if (stand != null) stand.remove();
         }
     }
 
@@ -123,27 +129,40 @@ public abstract class Device {
      */
     protected abstract void setEMC(BigInteger emcStored);
 
-    protected static final Vector3d holoBaseOffset = new Vector3d(0.5, 1.1, 0.5);
     /** updates the blocks holo, if necessary */
     final void holo() {
         if (type.hasHologram() && !hideText) {
-            ArmorStand stand = baseLocation.getExtent().getNearbyEntities(baseLocation.getPosition().add(holoBaseOffset), 0.1)
-                    .stream()
-                    .filter(e -> e instanceof ArmorStand)
-                    .findAny()
-                    .map(e -> (ArmorStand) e)
-                    .orElseGet(() -> {
-                        ArmorStand createdStand = (ArmorStand) baseLocation.getExtent().createEntity(EntityTypes.ARMOR_STAND, baseLocation.getPosition().add(holoBaseOffset));
-                        createdStand.offer(Keys.HAS_GRAVITY, false);
-                        createdStand.offer(Keys.AI_ENABLED, false);
-                        createdStand.offer(Keys.ARMOR_STAND_HAS_ARMS, false);
-                        createdStand.offer(Keys.ARMOR_STAND_HAS_BASE_PLATE, false);
-                        createdStand.offer(Keys.ARMOR_STAND_MARKER, true);
-                        createdStand.offer(Keys.INVISIBLE, true);
-                        createdStand.offer(Keys.CUSTOM_NAME_VISIBLE, true);
-                        baseLocation.spawnEntity(createdStand);
-                        return createdStand;
-                    });
+            ArmorStand stand = null;
+            if (holoEntityIDCache != null) {
+                stand = (ArmorStand) baseLocation.getExtent().getEntity(holoEntityIDCache)
+                        .filter(e -> e instanceof ArmorStand).orElse(null);
+            }
+            //check if armorstand is absent
+            if (stand == null) {
+                //scan for an existing armorstand
+                stand = baseLocation.getExtent().getNearbyEntities(holoPositionCache,holoScanDistance)
+                        .stream()
+                        .filter(e -> e instanceof ArmorStand)
+                        .findAny()
+                        .map(e -> (ArmorStand) e)
+                        .orElseGet(() -> { //if there's none, create one
+                            ArmorStand createdStand = (ArmorStand) baseLocation.getExtent().createEntity(EntityTypes.ARMOR_STAND, holoPositionCache);
+                            createdStand.offer(Keys.HAS_GRAVITY, false);
+                            createdStand.offer(Keys.AI_ENABLED, false);
+                            createdStand.offer(Keys.ARMOR_STAND_HAS_ARMS, false);
+                            createdStand.offer(Keys.ARMOR_STAND_HAS_BASE_PLATE, false);
+                            createdStand.offer(Keys.ARMOR_STAND_MARKER, true);
+                            createdStand.offer(Keys.INVISIBLE, true);
+                            createdStand.offer(Keys.CUSTOM_NAME_VISIBLE, true);
+                            baseLocation.spawnEntity(createdStand);
+                            Task.builder().delayTicks(1).execute(()->{
+                                if (!createdStand.isRemoved() && createdStand.isLoaded() && baseLocation.getExtent().isLoaded())
+                                    createdStand.setLocation(baseLocation.getExtent().getLocation(holoPositionCache));
+                            });
+                            return createdStand;
+                        });
+                holoEntityIDCache = stand.getUniqueId();
+            }
             stand.offer(Keys.DISPLAY_NAME, getHoloText());
         }
     }

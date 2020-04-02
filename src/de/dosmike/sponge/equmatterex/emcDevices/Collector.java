@@ -3,7 +3,6 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 import com.flowpowered.math.vector.Vector3d;
 import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.property.AbstractProperty;

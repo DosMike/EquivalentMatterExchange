@@ -3,7 +3,6 @@ package de.dosmike.sponge.equmatterex;
 import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.sun.xml.internal.ws.encoding.soap.DeserializationException;
-import com.typesafe.config.ConfigParseOptions;
 import de.dosmike.sponge.equmatterex.calculator.Calculator;
 import de.dosmike.sponge.equmatterex.calculator.WorldConversion;
 import de.dosmike.sponge.equmatterex.customNBT.CustomNBT;
@@ -34,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.5", authors={"DosMike"})
+@Plugin(id="equmatterex", name="EquivalentMatterExchange", version="0.5.1", authors={"DosMike"})
 public class EquivalentMatter {
 	
 	public static void main(String[] args) { System.err.println("This plugin can not be run as executable!"); }
@@ -126,7 +125,6 @@ public class EquivalentMatter {
 		try {
 			ConfigurationLoader<CommentedConfigurationNode> loader = HoconConfigurationLoader.builder()
 					.setPath(privateConfigDir.resolve("devices.conf"))
-					.setParseOptions(ConfigParseOptions.defaults())
 					.build();
 			ConfigurationNode root = loader.load(ConfigurationOptions.defaults());
 

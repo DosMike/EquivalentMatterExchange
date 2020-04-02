@@ -2,7 +2,6 @@ package de.dosmike.sponge.equmatterex.emcDevices;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.dosmike.sponge.equmatterex.EquivalentMatter;
-import de.dosmike.sponge.equmatterex.ItemTypeEx;
 import de.dosmike.sponge.equmatterex.util.ForgeHelper;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -71,16 +70,14 @@ public class DeviceRegistry {
     public static void onUnloadChunk(Chunk chunk) {
         synchronized (deviceLock) {
             Vector3i min = chunk.getBlockMin(), max = chunk.getBlockMax();
-            List<Location<World>> devices = deviceMap.entrySet().stream()
-                    .filter((k)->{
-                        Location<World> at = k.getKey();
+            List<Location<World>> devices = deviceMap.keySet().stream()
+                    .filter(at ->
                         //check if device is in unloading chunk
-                        return at.getExtent().getUniqueId().equals(chunk.getWorld().getUniqueId()) &&
-                        at.getBlockX()>=min.getX() && at.getBlockX()<=max.getX() &&
-                        at.getBlockY()>=min.getY() && at.getBlockY()<=max.getY() &&
-                        at.getBlockZ()>=min.getZ() && at.getBlockZ()<=max.getZ();
-                    })
-                    .map(Map.Entry::getKey)
+                        at.getExtent().getUniqueId().equals(chunk.getWorld().getUniqueId()) &&
+                        at.getBlockX() >= min.getX() && at.getBlockX() <= max.getX() &&
+                        at.getBlockY() >= min.getY() && at.getBlockY() <= max.getY() &&
+                        at.getBlockZ() >= min.getZ() && at.getBlockZ() <= max.getZ()
+                    )
                     .collect(Collectors.toList());
             for (Location<World> target : devices) {
                 Device device = deviceMap.remove(target);
@@ -124,7 +121,7 @@ public class DeviceRegistry {
         Location<World> base = loc;
         BlockType type = blockAtLoc.getType();
         if (ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR, type)  ||
-                ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
+            ForgeHelper.isOfType(ForgeHelper.DAYLIGHT_DETECTOR_INVERTED, type)) {
             base = loc.getRelative(Direction.DOWN);
         }
         BlockType bt = base.getBlockType();
